@@ -25,7 +25,10 @@ resp = requests.get('https://IP/url'), verify=False)
 
 Warning: 
 
-/usr/local/lib/python3.6/site-packages/urllib3/connectionpool.py:858: InsecureRequestWarning: Unverified HTTPS request is being made. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#ssl-warnings InsecureRequestWarning) 
+/usr/local/lib/python3.6/site-packages/urllib3/connectionpool.py:858:
+InsecureRequestWarning: Unverified HTTPS request is being made.
+Adding certificate verification is strongly advised.
+See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#ssl-warnings InsecureRequestWarning) 
 ```
 
 > Fix

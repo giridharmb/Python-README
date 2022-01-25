@@ -1,16 +1,14 @@
-# Python-README
+[Merging Dictionaries](#merging-dictionaries)
 
-#### [Merging Dictionaries](#merging-dictionaries)
+[Requests Module Warning](#requests-module-warning)
 
-#### [Requests Module Warning](#requests-module-warning)
+[Parallel Processing](#parallel-processing)
 
-#### [Parallel Processing](#parallel-processing)
+[Hashing And Salting](#hashing-and-salting)
 
-#### [Hashing And Salting](#hashing-and-salting)
+[Import And Reload File](#import-and-reload-file)
 
-#### [Import And Reload File](#import-and-reload-file)
-
-#### [Pretty Print JSON](#pretty-print-json)
+[Pretty Print JSON](#pretty-print-json)
 
 #### [Merging Dictionaries](#merging-dictionaries)
 

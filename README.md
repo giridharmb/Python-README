@@ -10,7 +10,7 @@
 
 [Pretty Print JSON](#pretty-print-json)
 
-[Flask API Using SSL Certificates on Localhost or 127.0.0.1](#flask-api)
+[Flask API Using SSL on Localhost or 127.0.0.1](#flask-api-using-ssl-on-localhost-or-127.0.0.1)
 
 #### [Merging Dictionaries](#merging-dictionaries)
 
@@ -199,7 +199,7 @@ pprint.pprint(parsed_json)
  'd': {'a1': 11, 'a2': 22}}
 ```
 
-#### [Flask API Using SSL Certificates on Localhost or 127.0.0.1](#flask-api)
+#### [Flask API Using SSL on Localhost or 127.0.0.1](#flask-api-using-ssl-on-localhost-or-127.0.0.1)
 
 FYI : Use A Random Pass/Key Like `cert@1234_abcdef` (in alll the 'openssl' commands below)
 
@@ -234,7 +234,8 @@ openssl x509 -req -in localhost.csr -CA CA.pem -CAkey CA.key -CAcreateserial -da
 openssl rsa -in localhost.key -out localhost.decrypted.key
 ```
 
-> Important : Go To Browser Settings > Security/Certifcates > Import 'CA.pem' (Generated Above, To Trust The CA)
+> Important : Go To Browser Settings > Security/Certifcates > 
+> Import 'CA.pem' (Generated Above, To Trust The CA)
 
 Flask API : 'runapp.py' 
 

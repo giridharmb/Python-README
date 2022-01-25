@@ -1,18 +1,18 @@
 # Python-README
 
-[Merging Dictionaries](#merging-dictionaries)
+#### [Merging Dictionaries](#merging-dictionaries)
 
-[Requests Module Warning](#requests-module-warning)
+#### [Requests Module Warning](#requests-module-warning)
 
-[Parallel Processing](#parallel-processing)
+#### [Parallel Processing](#parallel-processing)
 
-[Hashing And Salting](#hashing-and-salting)
+#### [Hashing And Salting](#hashing-and-salting)
 
-[Import And Reload File](#import-and-reload-file)
+#### [Import And Reload File](#import-and-reload-file)
 
-[Pretty Print JSON](#pretty-print-json)
+#### [Pretty Print JSON](#pretty-print-json)
 
-[Merging Dictionaries](#merging-dictionaries)
+#### [Merging Dictionaries](#merging-dictionaries)
 
 ```python
 >>> x = { "a" : 123, "b": "hello world", "c" : [1,2,3,4,5,6], "d" : { "a1": 11 , "a2": 22}}
@@ -25,7 +25,7 @@
 {'a': 123, 'b': 'whats up', 'c': [1, 2, 3, 4, 5, 6], 'd': {'a2': 9999}}
 ```
 
-[Requests Module Warning](#requests-module-warning)
+#### [Requests Module Warning](#requests-module-warning)
 
 How To Get Rid Of This Warning
 
@@ -48,7 +48,7 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning) 
 ```
 
-[Parallel Processing](#parallel-processing)
+#### [Parallel Processing](#parallel-processing)
 
 Example-1
 
@@ -108,7 +108,7 @@ worker = Multicore(multiple_iterables = True)
 result = worker.execute(process_multiple_iterables, [iterable1, iterable2, iterable3])
 ```
 
-[Hashing And Salting](#hashing-and-salting)
+#### [Hashing And Salting](#hashing-and-salting)
 
 ```python
 
@@ -139,13 +139,13 @@ decoded_text : (b'Hello stackoverflow!')
 '''
 ```
 
-[Import And Reload File](#import-and-reload-file)
+#### [Import And Reload File](#import-and-reload-file)
 
 ```python
-from importlib import reload;import backup;reload(backup);from backup import *;
+from importlib import reload;import backup;reload(backup);from backup import *
 ```
 
-[Pretty Print JSON](#pretty-print-json)
+#### [Pretty Print JSON](#pretty-print-json)
 
 ```python
 import pprint

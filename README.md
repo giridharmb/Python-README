@@ -235,6 +235,7 @@ openssl rsa -in localhost.key -out localhost.decrypted.key
 ```
 
 > Important : Go To Browser Settings > Security/Certifcates > 
+
 > Import 'CA.pem' (Generated Above, To Trust The CA)
 
 Flask API : 'runapp.py' 

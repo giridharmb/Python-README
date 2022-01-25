@@ -10,6 +10,8 @@
 
 [Pretty Print JSON](#pretty-print-json)
 
+[Flask API Using SSL Certificates on Localhost or 127.0.0.1](#flask-api)
+
 #### [Merging Dictionaries](#merging-dictionaries)
 
 Example-1:
@@ -196,3 +198,100 @@ pprint.pprint(parsed_json)
  'c': [1, 2, 3, 4, 5, 6],
  'd': {'a1': 11, 'a2': 22}}
 ```
+
+#### [Flask API Using SSL Certificates on Localhost or 127.0.0.1](#flask-api)
+
+FYI : Use A Random Pass/Key Like `cert@1234_abcdef` (in alll the 'openssl' commands below)
+
+Generate Certificates
+
+```bash
+openssl genrsa -out CA.key -des3 2048
+
+openssl req -x509 -sha256 -new -nodes -days 3650 -key CA.key -out CA.pem
+```
+
+Create A File `localhost.ext`, with following contents:
+
+```
+authorityKeyIdentifier = keyid,issuer
+basicConstraints = CA:FALSE
+keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = localhost
+IP.1 = 127.0.0.1
+```
+
+```bash
+openssl genrsa -out localhost.key -des3 2048
+
+openssl req -new -key localhost.key -out localhost.csr
+
+openssl x509 -req -in localhost.csr -CA CA.pem -CAkey CA.key -CAcreateserial -days 3650 -sha256 -extfile localhost.ext -out localhost.crt
+
+openssl rsa -in localhost.key -out localhost.decrypted.key
+```
+
+> Important : Go To Browser Settings > Security/Certifcates > Import 'CA.pem' (Generated Above, To Trust The CA)
+
+Flask API : 'runapp.py' 
+
+```python
+import ssl
+import json
+import requests
+from flask import Flask, request
+from flask import jsonify
+from flask import Response
+from flask import make_response
+import logging
+import logging.handlers
+import pprint
+import syslog
+
+syslog.syslog("this is a test message")
+
+app = Flask(__name__)
+
+@app.route('/')
+def hello():
+    return 'Hello, World!'
+
+@app.route("/api/v1/getData", methods=['GET'])
+def get_data():
+    if request.method == "GET":
+        syslog.syslog("request : GET : /api/v1/getData")
+        response = make_response()
+        data = { "a" : 123, "b": "hello world", "c" : [1,2,3,4,5,6], "d" : { "a1": 11 , "a2": 22}}
+        response = jsonify(data)
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+        response.headers.add('Access-Control-Allow-Methods', '*')
+        return response
+
+if __name__ == "__main__":
+    syslog.syslog("starting api...")
+    context = ('localhost.crt', 'localhost.decrypted.key')
+    app.run(debug=True, port=8000, host='127.0.0.1', ssl_context=context)
+```
+
+Start The Flask App
+
+```bash
+python3.8 runapp.py
+
+ * Serving Flask app 'runapp' (lazy loading)
+ * Environment: production
+   WARNING: This is a development server. Do not use it in a production deployment.
+   Use a production WSGI server instead.
+ * Debug mode: on
+ * Running on https://127.0.0.1:8000/ (Press CTRL+C to quit)
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 104-795-116
+127.0.0.1 - - [25/Jan/2022 13:09:00] "GET / HTTP/1.1" 200 -
+```
+
+Now, you should be able to access the URL `https://localhost:8000/api/v1/getData`

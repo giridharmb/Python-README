@@ -6,6 +6,7 @@
 
 #### [Parallel Processing](#parallel-processing)
 
+#### [Hashing+Salting](#hashing+salting)
 
 > [Merging Dictionaries](#merging-dictionaries)
 
@@ -97,4 +98,34 @@ from verstack import Multicore
 worker = Multicore(multiple_iterables = True) 
 # notice how multiple iterables are passed in a list
 result = worker.execute(process_multiple_iterables, [iterable1, iterable2, iterable3])
+```
+
+> [Hashing+Salting](#hashing+salting)
+```python
+
+from cryptography.fernet import Fernet
+
+#this is your "password"
+key = Fernet.generate_key()
+print("key : ({})".format(key))
+
+cipher_suite = Fernet(key)
+print("cipher_suite : ({})".format(cipher_suite))
+
+encoded_text = cipher_suite.encrypt(b"Hello stackoverflow!")
+print("encoded_text : ({})".format(encoded_text))
+
+decoded_text = cipher_suite.decrypt(encoded_text)
+print("decoded_text : ({})".format(decoded_text))
+
+'''
+Sample Output
+
+# python3.8 hashsalt.py
+
+key : (b'JnzcZrqoeKKWlxNikqgTR7rwi2NLK62OlL9Bc989GBA=')
+cipher_suite : (<cryptography.fernet.Fernet object at 0x10d2d9d00>)
+encoded_text : (b'gAAAAABh8CnMDZFx5fynIqbqwOlxsRmZKJmLEQ7USvcAfjvR_uF9bLJoGs2DPN_wQTXcmV7XY0zhjtBg9yU13aSqMMoq3u2MFbtvGwTlxo-5n9ybF5_uXlY=')
+decoded_text : (b'Hello stackoverflow!')
+'''
 ```

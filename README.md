@@ -1,8 +1,8 @@
 # Python-README
 
-[Merging Dictionaries](#merging-dictionaries)
+#### [Merging Dictionaries](#merging-dictionaries)
 
-[Requests Module Warning](#requests-module-warning)
+#### [Requests Module Warning](#requests-module-warning)
 
 #### [Merging Dictionaries](#merging-dictionaries)
 

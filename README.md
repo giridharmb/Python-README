@@ -12,6 +12,8 @@
 
 [Flask API Using SSL on localhost](#flask-api-using-ssl-on-localhost)
 
+[PIP Config](#pip-config)
+
 <hr/>
 
 #### [Merging Dictionaries](#merging-dictionaries)
@@ -300,3 +302,14 @@ python3.8 runapp.py
 ```
 
 Now, you should be able to access the URL `https://localhost:8000/api/v1/getData`
+
+#### [PIP Config](#pip-config)
+
+File `~/.pip/pip.conf`
+
+```ini
+[global]
+trusted-host = pypi.python.org
+               pypi.org
+               files.pythonhosted.org
+```

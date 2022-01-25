@@ -8,6 +8,10 @@
 
 #### [Hashing+Salting](#hashing+salting)
 
+#### [Import And Reload File](#import-and-reload-file)
+
+#### [Pretty Print JSON](#pretty-print-json)
+
 > [Merging Dictionaries](#merging-dictionaries)
 
 ```python
@@ -128,4 +132,46 @@ cipher_suite : (<cryptography.fernet.Fernet object at 0x10d2d9d00>)
 encoded_text : (b'gAAAAABh8CnMDZFx5fynIqbqwOlxsRmZKJmLEQ7USvcAfjvR_uF9bLJoGs2DPN_wQTXcmV7XY0zhjtBg9yU13aSqMMoq3u2MFbtvGwTlxo-5n9ybF5_uXlY=')
 decoded_text : (b'Hello stackoverflow!')
 '''
+```
+
+> [Import And Reload File](#import-and-reload-file)
+```python
+from importlib import reload;import backup;reload(backup);from backup import *;
+```
+
+> [Pretty Print JSON](#pretty-print-json)
+
+```python
+import pprint
+import json
+
+x = '{ "a" : 123, "b": "hello world", "c" : [1,2,3,4,5,6], "d" : { "a1": 11 , "a2": 22}}'
+
+parsed_json = json.loads(x)
+
+print(json.dumps(parsed_json, indent=4, sort_keys=True))
+
+{
+    "a": 123,
+    "b": "hello world",
+    "c": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+    ],
+    "d": {
+        "a1": 11,
+        "a2": 22
+    }
+}
+
+pprint.pprint(parsed_json)
+
+{'a': 123,
+ 'b': 'hello world',
+ 'c': [1, 2, 3, 4, 5, 6],
+ 'd': {'a1': 11, 'a2': 22}}
 ```

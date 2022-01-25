@@ -14,7 +14,7 @@
 
 [PIP Config](#pip-config)
 
-[Multi Processing Pool](#multi-processing-pool)
+[Multi Processing Pool With Queue](#multi-processing-pool-with-queue)
 
 <hr/>
 
@@ -316,7 +316,55 @@ trusted-host = pypi.python.org
                files.pythonhosted.org
 ```
 
-#### [Multi Processing Pool](#multi-processing-pool)
+#### [Multi Processing Pool With Queue](#multi-processing-pool-with-queue)
+
+File : `multiproc.py`
+
+```python
+from multiprocessing import Process, Queue
+import time
+import sys
+
+def reader_proc(queue):
+    ## Read from the queue; this will be spawned as a separate Process
+    while True:
+        msg = queue.get()         # Read from the queue and do nothing
+        if (msg == 'DONE'):
+            break
+
+def writer(count, queue):
+    ## Write to the queue
+    for ii in range(0, count):
+        queue.put(ii)             # Write 'count' numbers into the queue
+    queue.put('DONE')
+
+if __name__=='__main__':
+    pqueue = Queue() # writer() writes to pqueue from _this_ process
+    for count in [100000, 200000, 400000]:
+
+        ### reader_proc() reads from pqueue as a separate process
+
+        reader_p = Process(target=reader_proc, args=((pqueue),))
+        reader_p.daemon = True
+        reader_p.start()        # Launch reader_proc() as a separate python process
+
+        _start = time.time()
+        writer(count, pqueue)    # Send a lot of stuff to reader()
+        reader_p.join()          # Wait for the reader to finish
+        print("Sending {0} numbers to Queue() took {1} seconds".format(count, (time.time() - _start)))
+```
+
+Output:
+
+```
+# python3.8 multiproc.py
+
+Sending 100000 numbers to Queue() took 1.3959307670593262 seconds
+Sending 200000 numbers to Queue() took 3.0190162658691406 seconds
+Sending 400000 numbers to Queue() took 7.687782049179077 seconds
+```
+
+FYI >
 
 ```
 ----------------------------------------------------------------------------

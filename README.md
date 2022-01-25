@@ -12,6 +12,8 @@
 
 #### [Merging Dictionaries](#merging-dictionaries)
 
+Example-1:
+
 ```python
 >>> x = { "a" : 123, "b": "hello world", "c" : [1,2,3,4,5,6], "d" : { "a1": 11 , "a2": 22}}
 >>>
@@ -20,6 +22,21 @@
 >>> x.update(y)
 >>>
 >>> x
+{'a': 123, 'b': 'whats up', 'c': [1, 2, 3, 4, 5, 6], 'd': {'a2': 9999}}
+```
+
+Example-2:
+
+```python
+def merge_dicts(dict1, dict2):
+    res = {**dict1, **dict2}
+    return res
+
+x = { "a" : 123, "b": "hello world", "c" : [1,2,3,4,5,6], "d" : { "a1": 11 , "a2": 22}}
+y = { "b" : "whats up" , "d" : { "a2": 9999}}
+
+merged = merge_dicts(x,y)
+print(merged)
 {'a': 123, 'b': 'whats up', 'c': [1, 2, 3, 4, 5, 6], 'd': {'a2': 9999}}
 ```
 

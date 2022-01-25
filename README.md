@@ -6,7 +6,7 @@
 
 #### [Parallel Processing](#parallel-processing)
 
-#### [Hashing+Salting](#hashing+salting)
+#### [Hashing And Salting](#hashing-and-salting)
 
 #### [Import And Reload File](#import-and-reload-file)
 
@@ -108,7 +108,7 @@ worker = Multicore(multiple_iterables = True)
 result = worker.execute(process_multiple_iterables, [iterable1, iterable2, iterable3])
 ```
 
-[Hashing+Salting](#hashing+salting)
+[Hashing And Salting](#hashing-and-salting)
 
 ```python
 

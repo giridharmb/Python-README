@@ -12,7 +12,7 @@
 
 #### [Pretty Print JSON](#pretty-print-json)
 
-> [Merging Dictionaries](#merging-dictionaries)
+[Merging Dictionaries](#merging-dictionaries)
 
 ```python
 >>> x = { "a" : 123, "b": "hello world", "c" : [1,2,3,4,5,6], "d" : { "a1": 11 , "a2": 22}}
@@ -25,9 +25,10 @@
 {'a': 123, 'b': 'whats up', 'c': [1, 2, 3, 4, 5, 6], 'd': {'a2': 9999}}
 ```
 
-> [Requests Module Warning](#requests-module-warning)
+[Requests Module Warning](#requests-module-warning)
 
-> How To Get Rid Of This Warning
+How To Get Rid Of This Warning
+
 ```python
 resp = requests.get('https://IP/url'), verify=False)
 
@@ -39,16 +40,18 @@ Adding certificate verification is strongly advised.
 See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#ssl-warnings InsecureRequestWarning) 
 ```
 
-> Fix
+Fix
+
 ```python
 import requests 
 from requests.packages.urllib3.exceptions import InsecureRequestWarning 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning) 
 ```
 
-> [Parallel Processing](#parallel-processing)
+[Parallel Processing](#parallel-processing)
 
-> Example-1
+Example-1
+
 ```python
 iterable = range(0,1000000)
 
@@ -67,7 +70,8 @@ if __name__ == '__main__':
     execute_func_using_verstack()
 ```
 
-> Example-2
+Example-2
+
 ```python
 iterable = range(0,10)
 
@@ -82,7 +86,7 @@ print(result)
 [[0, 1, 4, 9, 16, 25, 36, 49, 64, 81], [0, 1, 8, 27, 64, 125, 216, 343, 512, 729]]
 ```
 
-> Example-3
+Example-3
 
 ```python
 # iterate over multiple iterables
@@ -104,7 +108,8 @@ worker = Multicore(multiple_iterables = True)
 result = worker.execute(process_multiple_iterables, [iterable1, iterable2, iterable3])
 ```
 
-> [Hashing+Salting](#hashing+salting)
+[Hashing+Salting](#hashing+salting)
+
 ```python
 
 from cryptography.fernet import Fernet
@@ -134,12 +139,13 @@ decoded_text : (b'Hello stackoverflow!')
 '''
 ```
 
-> [Import And Reload File](#import-and-reload-file)
+[Import And Reload File](#import-and-reload-file)
+
 ```python
 from importlib import reload;import backup;reload(backup);from backup import *;
 ```
 
-> [Pretty Print JSON](#pretty-print-json)
+[Pretty Print JSON](#pretty-print-json)
 
 ```python
 import pprint

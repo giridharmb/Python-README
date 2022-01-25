@@ -10,7 +10,7 @@
 
 [Pretty Print JSON](#pretty-print-json)
 
-[Flask API Using SSL on Localhost or 127.0.0.1](#flask-api-using-ssl-on-localhost-or-127.0.0.1)
+[Flask API Using SSL on localhost](#flask-api-using-ssl-on-localhost)
 
 #### [Merging Dictionaries](#merging-dictionaries)
 
@@ -199,7 +199,7 @@ pprint.pprint(parsed_json)
  'd': {'a1': 11, 'a2': 22}}
 ```
 
-#### [Flask API Using SSL on Localhost or 127.0.0.1](#flask-api-using-ssl-on-localhost-or-127.0.0.1)
+#### [Flask API Using SSL on localhost](#flask-api-using-ssl-on-localhost)
 
 FYI : Use A Random Pass/Key Like `cert@1234_abcdef` (in alll the 'openssl' commands below)
 

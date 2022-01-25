@@ -4,9 +4,10 @@
 
 #### [Requests Module Warning](#requests-module-warning)
 
-#### [Merging Dictionaries](#merging-dictionaries)
-
 #### [Parallel Processing](#parallel-processing)
+
+
+> [Merging Dictionaries](#merging-dictionaries)
 
 ```python
 >>> x = { "a" : 123, "b": "hello world", "c" : [1,2,3,4,5,6], "d" : { "a1": 11 , "a2": 22}}
@@ -19,7 +20,7 @@
 {'a': 123, 'b': 'whats up', 'c': [1, 2, 3, 4, 5, 6], 'd': {'a2': 9999}}
 ```
 
-#### [Requests Module Warning](#requests-module-warning)
+> [Requests Module Warning](#requests-module-warning)
 
 > How To Get Rid Of This Warning
 ```python
@@ -40,7 +41,7 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning) 
 ```
 
-#### [Parallel Processing](#parallel-processing)
+> [Parallel Processing](#parallel-processing)
 
 > Example-1
 ```python

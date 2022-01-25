@@ -201,7 +201,7 @@ pprint.pprint(parsed_json)
 
 #### [Flask API Using SSL on localhost](#flask-api-using-ssl-on-localhost)
 
-FYI : Use A Random Pass/Key Like `cert@1234_abcdef` (in alll the 'openssl' commands below)
+FYI : Use A Random Pass/Key Like `cert@1234_abcdef` (in all the 'openssl' commands below)
 
 Generate Certificates
 

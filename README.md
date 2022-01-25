@@ -12,6 +12,8 @@
 
 [Flask API Using SSL on localhost](#flask-api-using-ssl-on-localhost)
 
+<hr/>
+
 #### [Merging Dictionaries](#merging-dictionaries)
 
 Example-1:
@@ -296,25 +298,5 @@ python3.8 runapp.py
  * Debugger PIN: 104-795-116
 127.0.0.1 - - [25/Jan/2022 13:09:00] "GET / HTTP/1.1" 200 -
 ```
-
-<table>
-  <tr>
-    <th>ID</th><th>Name</th><th>Rank</th>
-  </tr>
-  <tr>
-    <td>1</td><td>Tom Preston-Werner</td><td>Awesome</td>
-  </tr>
-  <tr>
-    <td>2</td><td>Albert Einstein</td><td>Nearly as awesome</td>
-  </tr>
-</table>
-
-<dl>
-  <dt>Lower cost</dt>
-  <dd>The new version of this product costs significantly less than the previous one!</dd>
-  <dt>Easier to use</dt>
-  <dd>We've changed the product so that it's much easier to use!</dd>
-</dl>
-
 
 Now, you should be able to access the URL `https://localhost:8000/api/v1/getData`

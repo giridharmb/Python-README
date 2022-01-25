@@ -319,8 +319,9 @@ trusted-host = pypi.python.org
 #### [Multi Processing Pool](#multi-processing-pool)
 
 ```
+----------------------------------------------------------------------------
                   | Multi-args   Concurrence    Blocking     Ordered-results
----------------------------------------------------------------------
+----------------------------------------------------------------------------
 Pool.map          | no           yes            yes          yes
 Pool.map_async    | no           yes            no           yes
 Pool.apply        | yes          no             yes          no

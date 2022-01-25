@@ -6,7 +6,7 @@
 
 #### [Merging Dictionaries](#merging-dictionaries)
 
-#### [Paralle Processing](#parallel-processing)
+#### [Parallel Processing](#parallel-processing)
 
 ```python
 >>> x = { "a" : 123, "b": "hello world", "c" : [1,2,3,4,5,6], "d" : { "a1": 11 , "a2": 22}}
@@ -40,7 +40,7 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning) 
 ```
 
-#### [Paralle Processing](#parallel-processing)
+#### [Parallel Processing](#parallel-processing)
 
 > Example-1
 ```python

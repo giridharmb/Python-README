@@ -22,6 +22,8 @@
 
 [Number Padding With Zeros](#number-padding-with-zeros)
 
+[Sending Mails](#sending-mails)
+
 <hr/>
 
 #### [Merging Dictionaries](#merging-dictionaries)
@@ -523,4 +525,169 @@ For Numbers
 004
 >>> print('{:03d}'.format(n))  # python >= 2.7 + python3
 004
+```
+
+#### [Sending Mails](#sending-mails)
+
+*How To Send HTML Contents Programatically*
+
+File: `custommailsend.py`
+
+```python
+import smtplib
+from email.message import EmailMessage
+from email.mime.text import MIMEText
+import argparse
+import sys
+
+
+def send_mail(to_email=[],
+              cc_users=[],
+              bcc_users=[],
+              subject=None,
+              htmlfile=None,
+              smtp_server='smtp.my-company.com',
+              from_email=None):
+
+    if len(to_email) == 0:
+        print("please provide 'to_email' list")
+        sys.exit(1)
+
+    if subject is None:
+        print("please provide 'subject'")
+        sys.exit(1)
+
+    if htmlfile is None:
+        print("please provide 'htmlfile'")
+        sys.exit(1)
+
+    msg = EmailMessage()
+
+    msg['Subject'] = subject
+    msg['From'] = from_email
+    msg['To'] = to_email
+    msg['Cc'] = cc_users
+    msg['Bcc'] = bcc_users
+
+    # msg.set_content(message)
+
+    with open(htmlfile, "r", encoding='utf-8') as f:
+        htmltext=f.read()
+
+    msg.set_content(htmltext, subtype='html')
+
+    print(msg)
+    server = smtplib.SMTP(smtp_server)
+    server.set_debuglevel(1)
+    # server.login(username, password)  # user & password
+    server.send_message(msg)
+    server.quit()
+    print('successfully sent the mail.')
+
+def main():
+
+    # Create the parser
+    parser = argparse.ArgumentParser()
+    # Add an argument
+    parser.add_argument('--subject', type=str, required=True)
+    parser.add_argument('--smtpserver', type=str, required=True)
+    parser.add_argument('--htmlfile', type=str, required=True)
+    parser.add_argument('--emailfrom', type=str, required=True)
+    parser.add_argument('--emailto', type=str, required=True)
+    parser.add_argument('--cc', type=str, required=False)
+    parser.add_argument('--bcc', type=str, required=False)
+    # Parse the argument
+    args = parser.parse_args()
+    # Print "Hello" + the user input argument
+
+    subject = args.subject
+    if subject is None or subject == '':
+        print("please provide 'subject'")
+        sys.exit(1)
+
+    smtpserver = args.smtpserver
+    if smtpserver is None or smtpserver == '':
+        print("please provide 'smtpserver'")
+        sys.exit(1)
+
+    htmlfile = args.htmlfile
+    if htmlfile is None or htmlfile == '':
+        print("please provide 'htmlfile'")
+        sys.exit(1)
+
+    emailfrom = args.emailfrom
+    if emailfrom is None or emailfrom == '':
+        print("please provide 'emailfrom'")
+        sys.exit(1)
+
+    emailto = args.emailto
+    if emailto is None or emailto == '':
+        print("please provide 'emailto'")
+        sys.exit(1)
+
+    to_users = str(emailto).replace(' ', '').split(',')
+
+    cc_users = []
+    cc_args = args.cc
+    if cc_args is not None:
+        cc_users = cc_args.replace(' ', '').split(',')
+
+    bcc_users = []
+    bcc_args = args.bcc
+    if bcc_args is not None:
+        bcc_users = bcc_args.replace(' ', '').split(',')
+
+
+    send_mail(to_users, cc_users, bcc_users, subject, htmlfile, smtpserver, emailfrom)
+
+if __name__ == "__main__":
+    main()
+```
+
+Usage:
+
+```bash
+python3.8 custommailsend.py \
+--subject 'Testing : Please Ignore This Message' \
+--smtpserver smtp.my-company.com \
+--htmlfile file-contents.txt \
+--emailfrom User-1@my-company.com \
+--emailto 'User-2@my-company.com' \
+--cc 'User-CC-1@my-company.com,User-CC-2@my-company.com' \
+--bcc 'User-BCC@my-company.com'
+```
+
+In the above example, we are sending contents of HTML file `file-contents.txt`
+
+Contents of the file `file-contents.txt`
+
+```html
+<html>
+<head>
+<style>
+table, th, td {
+  border: 1px solid #c6c6c6;
+  border-collapse: collapse;
+}
+th, td {
+  padding-top: 10px;
+  padding-bottom: 20px;
+  padding-left: 30px;
+  padding-right: 40px;
+}
+</style>
+</head>
+
+<body>
+<table border="1px">
+<tr>
+<td>Testing Instance-1</td>
+<td>Testing Instance-2</td>
+</tr>
+<tr>
+<td>Testing Instance-3</td>
+<td>Testing Instance-4</td>
+</tr>
+</body>
+</html>
 ```

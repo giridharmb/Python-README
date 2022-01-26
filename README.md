@@ -16,6 +16,8 @@
 
 [Multi Processing Pool With Queue](#multi-processing-pool-with-queue)
 
+[Read And Write JSON Files](#read-and-write-json-files)
+
 <hr/>
 
 #### [Merging Dictionaries](#merging-dictionaries)
@@ -376,4 +378,69 @@ Pool.apply        | yes          no             yes          no
 Pool.apply_async  | yes          yes            no           no
 Pool.starmap      | yes          yes            yes          yes
 Pool.starmap_async| yes          yes            no           no
+```
+
+#### [Read And Write JSON Files](#read-and-write-json-files)
+
+```python
+import json
+
+def get_json_contents(file_name):
+    try:
+        with open(file_name) as json_file:
+            data = json.load(json_file)
+            return data
+    except Exception as ex:
+        print("error : could not read file ({}} : {}".format(file_name, ex))
+
+
+def write_json_contents(json_data, output_file):
+    try:
+        with open(output_file, 'w') as output_file:
+            json.dump(json_data, output_file, indent=4, sort_keys=True)
+    except Exception as ex:
+        print("error : could not write file ({}} : {}".format(output_file, ex))
+
+
+def main():
+
+    ## step-1: write the json file
+
+    file_name = 'data1.json'
+    json_data = { "a" : 123, "b": "hello world", "c" : [1,2,3,4,5,6], "d" : { "a1": 11 , "a2": 22}}
+    write_json_contents(json_data, file_name)
+
+    print("\njson data written to file '{}'...\n".format(file_name))
+
+    ## step-2: read the json file
+
+    read_content = get_json_contents(file_name)
+
+    if read_content is not None:
+        print("\ncontents of the file '{}':\n".format(file_name))
+        print(json.dumps(read_content, indent=4, sort_keys=True))
+
+if __name__ == "__main__":
+    main()
+```
+
+After running the above program, contents of the file 'data1.json':
+
+```json
+{
+    "a": 123,
+    "b": "hello world",
+    "c": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+    ],
+    "d": {
+        "a1": 11,
+        "a2": 22
+    }
+}
 ```

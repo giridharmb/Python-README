@@ -424,7 +424,7 @@ if __name__ == "__main__":
     main()
 ```
 
-After running the above program, contents of the file 'data1.json':
+After running the above program, contents of the file '`data1.json`':
 
 ```json
 {

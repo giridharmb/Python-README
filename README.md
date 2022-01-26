@@ -18,6 +18,8 @@
 
 [Read And Write JSON Files](#read-and-write-json-files)
 
+[Multiple or Variable Arguments To Function](#multiple-or-variable-arguments-to-function)
+
 <hr/>
 
 #### [Merging Dictionaries](#merging-dictionaries)
@@ -443,4 +445,52 @@ After running the above program, contents of the file `data1.json`:
         "a2": 22
     }
 }
+```
+
+#### [Multiple or Variable Arguments To Function](#multiple-or-variable-arguments-to-function)
+
+```python
+#!/usr/local/bin/python3.7
+
+import argparse
+
+parser = argparse.ArgumentParser(description='Arg Parser')
+
+parser.add_argument('--arg_1', action="store", dest="arg1", default="false")
+parser.add_argument('--arg_2', action="store", dest="arg2", default="my_arg_2")
+parser.add_argument('--arg_3', action="store", dest="arg3", default="my_arg_3")
+
+def my_func(*args, **kwargs):  
+    for item in args:
+        print("*args item : {}".format(item))
+    for key, value in kwargs.items():
+        print ("key => {} , value => {}".format(key, value))
+
+def main():
+    results = parser.parse_args()
+    print("ARG1 : {}".format(results.arg1))
+    print("ARG2 : {}".format(results.arg2))
+    print("ARG3 : {}".format(results.arg3))
+
+    my_func(1,2,3,4, [5,6,7], {"a":"11","b":"22"}, item1="123", item2="456", dict1={"xx":"zz"})
+
+if __name__ == "__main__":
+    main()
+```
+
+Output:
+
+```bash
+ARG1 : false
+ARG2 : my_arg_2
+ARG3 : my_arg_3
+*args item : 1
+*args item : 2
+*args item : 3
+*args item : 4
+*args item : [5, 6, 7]
+*args item : {'a': '11', 'b': '22'}
+key => item1 , value => 123
+key => item2 , value => 456
+key => dict1 , value => {'xx': 'zz'}
 ```

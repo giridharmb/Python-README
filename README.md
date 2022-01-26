@@ -20,6 +20,8 @@
 
 [Multiple or Variable Arguments To Function](#multiple-or-variable-arguments-to-function)
 
+[Number Padding With Zeros](#number-padding-with-zeros)
+
 <hr/>
 
 #### [Merging Dictionaries](#merging-dictionaries)
@@ -493,4 +495,32 @@ ARG3 : my_arg_3
 key => item1 , value => 123
 key => item2 , value => 456
 key => dict1 , value => {'xx': 'zz'}
+```
+
+#### [Number Padding With Zeros](#number-padding-with-zeros)
+
+For Strings
+
+```python
+>>> n = '4'
+>>> print(n.zfill(3))
+004
+```
+
+For Numbers
+
+```python
+>>> n = 4
+>>> print(f'{n:03}') # Preferred method, python >= 3.6
+004
+>>> print('%03d' % n)
+004
+>>> print(format(n, '03')) # python >= 2.6
+004
+>>> print('{0:03d}'.format(n))  # python >= 2.6 + python 3
+004
+>>> print('{foo:03d}'.format(foo=n))  # python >= 2.6 + python 3
+004
+>>> print('{:03d}'.format(n))  # python >= 2.7 + python3
+004
 ```

@@ -24,6 +24,8 @@
 
 [Sending Mails](#sending-mails)
 
+[Nested Dictionary](#nested-dictionary)
+
 <hr/>
 
 #### [Merging Dictionaries](#merging-dictionaries)
@@ -690,4 +692,25 @@ th, td {
 </tr>
 </body>
 </html>
+```
+
+#### [Nested Dictionary](#nested-dictionary)
+
+
+```bash
+sudo pip3.8 install nested_dict
+```
+
+```python
+import nested_dict as nd
+
+nest = nd.nested_dict()
+
+nest['outer1']['inner1'] = 'v11'
+nest['outer1']['inner2'] = 'v12'
+nest['outer2'] = [1,2,3]
+
+nest.to_dict()
+
+{'outer1': {'inner1': 'v11', 'inner2': 'v12'}, 'outer2': [1, 2, 3]}
 ```

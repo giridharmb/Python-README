@@ -26,6 +26,10 @@
 
 [Nested Dictionary](#nested-dictionary)
 
+[Upgrade PIP](#upgrade-pip)
+
+[MongoDB Operations](#mongodb-operations)
+
 <hr/>
 
 #### [Merging Dictionaries](#merging-dictionaries)
@@ -713,4 +717,651 @@ nest['outer2'] = [1,2,3]
 nest.to_dict()
 
 {'outer1': {'inner1': 'v11', 'inner2': 'v12'}, 'outer2': [1, 2, 3]}
+```
+
+#### [Upgrade PIP](#upgrade-pip)
+
+```bash
+python3.8 -m pip install --upgrade pip
+
+python2.7 -m pip install --upgrade pip
+```
+
+#### [MongoDB Operations](#mongodb-operations)
+
+```bash
+pip3.8 install pymongo
+```
+
+```python
+import pymongo
+import json
+import os
+import argparse
+import sys
+import pdb
+from bson.objectid import ObjectId
+from functools import wraps
+import requests
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
+
+# mongodb connection timeout in milliseconds
+ServerSelectionTimeoutMS = 5000
+
+def main():
+    #------------------------------------------------------------------------
+    parser = argparse.ArgumentParser()
+
+    valid_operations = [
+        'insert_record',
+        'insert_many_records',
+        'query_records',
+        'record_create_or_update',
+        'record_update_if_exists',
+        'record_replace_if_exists',
+        'records_delete',
+        'drop_collection'
+    ]
+
+    parser.add_argument('--operation', type=str, required=True, help=json.dumps(valid_operations))
+
+    parser.add_argument('--mongohost', type=str, required=True, help='Ex: my-host1234.example.com')
+    parser.add_argument('--mongouser', type=str, required=True, help='Ex: user1')
+    parser.add_argument('--mongopass', type=str, required=True, help='Ex: pass123')
+    parser.add_argument('--mongodb', type=str, required=True, help='Ex: database1')
+    parser.add_argument('--mongocollection', type=str, required=True, help='Ex: collection1')
+    parser.add_argument('--queryfilter', type=str, required=False, help='Ex: key1')
+    parser.add_argument('--data', type=str, required=False, help='Ex: \'{"x": "1", "y": "2"}\'')
+
+    args = parser.parse_args()
+
+    operation = args.operation
+
+    if operation is None or operation == "":
+        print("Missing Input , Please 'operation' Ex: --operation '<value>'")
+        sys.exit(1)
+
+    if operation not in valid_operations:
+        print("Please provide a valid operation : --operation '<value>' , where <value> is one of these:")
+        print(json.dumps(valid_operations, indent=4, sort_keys=True))
+        sys.exit(1)
+
+    ########################################################################################
+
+    mongohost = args.mongohost
+    if mongohost is None or mongohost == "":
+        print("Missing Input , Please 'mongohost' Ex: --mongohost '<value>'")
+        sys.exit(1)
+
+    mongouser = args.mongouser
+    if mongouser is None or mongouser == "":
+        print("Missing Input , Please 'mongouser' Ex: --mongouser '<value>'")
+        sys.exit(1)
+
+    mongopass = args.mongopass
+    if mongopass is None or mongopass == "":
+        print("Missing Input , Please 'mongopass' Ex: --mongopass '<value>'")
+        sys.exit(1)
+
+    mongodb = args.mongodb
+    if mongodb is None or mongodb == "":
+        print("Missing Input , Please 'mongodb' Ex: --mongodb '<value>'")
+        sys.exit(1)
+
+    mongocollection = args.mongocollection
+    if mongocollection is None or mongocollection == "":
+        print("Missing Input , Please 'mongocollection' Ex: --mongocollection '<value>'")
+        sys.exit(1)
+
+    mongocollection = args.mongocollection
+    if mongocollection is None or mongocollection == "":
+        print("Missing Input , Please 'mongocollection' Ex: --mongocollection '<value>'")
+        sys.exit(1)
+
+    ########################################################################################
+
+    if operation == "record_create_or_update":
+        queryfilter = args.queryfilter
+        if queryfilter is None or queryfilter == "":
+            print("Missing Input , Please 'queryfilter' Ex: --queryfilter '<value>' , Ex: --queryfilter '{\"name\": \"user1\" , \"age\": \"25\"}'")
+            sys.exit(1)
+
+        data = args.data
+        if data is None or data == "":
+            print("Missing Input , Please 'data' Ex: --data '<value>' , Ex: --value '{\"k1\": \"v1\" , \"k2\": \"v2\"}'")
+            sys.exit(1)
+
+        create_or_update_record(mongohost=mongohost, mongouser=mongouser, mongopass=mongopass, mongodb=mongodb, mongocollection=mongocollection, queryfilter=queryfilter, data=data)
+
+
+    if operation == "record_update_if_exists":
+        queryfilter = args.queryfilter
+        if queryfilter is None or queryfilter == "":
+            print("Missing Input , Please 'queryfilter' Ex: --queryfilter '<value>', Ex: --queryfilter '{\"name\": \"user1\" , \"age\": \"25\"}'")
+            sys.exit(1)
+
+        data = args.data
+        if data is None or data == "":
+            print("Missing Input , Please 'data' Ex: --data '<value>' , Ex: --value '{\"k1\": \"v1\" , \"k2\": \"v2\"}'")
+            sys.exit(1)
+
+        record_update_if_exists(mongohost=mongohost, mongouser=mongouser, mongopass=mongopass, mongodb=mongodb, mongocollection=mongocollection, queryfilter=queryfilter, data=data)
+
+    if operation == "record_replace_if_exists":
+        queryfilter = args.queryfilter
+        if queryfilter is None or queryfilter == "":
+            print("Missing Input , Please 'queryfilter' Ex: --queryfilter '<value>' , Ex: --queryfilter '{\"name\": \"user1\" , \"age\": \"25\"}'")
+            sys.exit(1)
+
+        data = args.data
+        if data is None or data == "":
+            print("Missing Input , Please 'data' Ex: --data '<value>' , Ex: --value '{\"k1\": \"v1\" , \"k2\": \"v2\"}'")
+            sys.exit(1)
+
+        replace_records_if_exists(mongohost=mongohost, mongouser=mongouser, mongopass=mongopass, mongodb=mongodb, mongocollection=mongocollection, queryfilter=queryfilter, data=data)
+
+
+    if operation == "insert_record":
+        data = args.data
+        if data is None or data == "":
+            print("Missing Input , Please 'data' Ex: --data '<value>' , Ex: --value '{\"k1\": \"v1\" , \"k2\": \"v2\"}'")
+            sys.exit(1)
+        insert_record(mongohost=mongohost, mongouser=mongouser, mongopass=mongopass, mongodb=mongodb, mongocollection=mongocollection, data=data)
+
+
+    if operation == "insert_many_records":
+        data = args.data
+        if data is None or data == "":
+            print("Missing Input , Please 'data' Ex: --data '<value>' , Ex: --value '{\"k1\": \"v1\" , \"k2\": \"v2\"}'")
+            sys.exit(1)
+        insert_many_records(mongohost=mongohost, mongouser=mongouser, mongopass=mongopass, mongodb=mongodb, mongocollection=mongocollection, data=data)
+
+
+    if operation == "query_records":
+        queryfilter = args.queryfilter
+        if queryfilter is None or queryfilter == "":
+            print("Missing Input , Please 'queryfilter' Ex: --queryfilter '<value>' , Ex: --queryfilter '{\"name\": \"user1\" , \"age\": \"25\"}'")
+            sys.exit(1)
+        query_records(mongohost=mongohost, mongouser=mongouser, mongopass=mongopass, mongodb=mongodb, mongocollection=mongocollection, queryfilter=queryfilter, print_output=True)
+
+
+    if operation == "records_delete":
+        queryfilter = args.queryfilter
+        if queryfilter is None or queryfilter == "":
+            print("Missing Input , Please 'queryfilter' Ex: --queryfilter '<value>' , Ex: --queryfilter '{\"name\": \"user1\" , \"age\": \"25\"}'")
+            sys.exit(1)
+        records_delete(mongohost=mongohost, mongouser=mongouser, mongopass=mongopass, mongodb=mongodb, mongocollection=mongocollection, queryfilter=queryfilter)
+
+    if operation == "drop_collection":
+        drop_collection(mongohost=mongohost, mongouser=mongouser, mongopass=mongopass, mongodb=mongodb, mongocollection=mongocollection)
+
+
+########################################################################################
+
+def get_json_from_str(my_str):
+    return json.loads(my_str)
+
+def is_str_json(input_string=''):
+    try:
+        my_dict = json.loads(input_string)
+        if type(my_dict) == dict:
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+def is_str_list(input_string=''):
+    try:
+        my_dict = json.loads(input_string)
+        if type(my_dict) == list:
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+########################################################################################
+
+'''
+        valid JSON : query-filer + data
+'''
+
+def valid_json_filter_and_data(f):
+    @wraps(f)
+    def decorated_func(*args, **kwargs):
+        queryfilter = kwargs.get('queryfilter')
+        data = kwargs.get('data')
+
+        if queryfilter is None or queryfilter == "":
+            result = {"response": "queryfilter:missing"}
+            print(json.dumps(result, indent=4, sort_keys=True))
+            return
+
+        if data is None or data == "":
+            result = {"response": "data:missing"}
+            print(json.dumps(result, indent=4, sort_keys=True))
+            return
+
+        if not is_str_json(queryfilter):
+            result = {"response": "queryfilter:invalid_json"}
+            print(json.dumps(result, indent=4, sort_keys=True))
+            return
+        elif not is_str_json(data):
+            result = {"response": "data:invalid_json"}
+            print(json.dumps(result, indent=4, sort_keys=True))
+            return
+        else:
+            return f(*args, **kwargs)
+    return decorated_func
+
+'''
+        valid JSON : query-filer
+'''
+
+def valid_json_filter(f):
+    @wraps(f)
+    def decorated_func(*args, **kwargs):
+        queryfilter = kwargs.get('queryfilter')
+
+        if queryfilter is None or queryfilter == "":
+            result = {"response": "queryfilter:missing"}
+            print(json.dumps(result, indent=4, sort_keys=True))
+            return
+
+        if not is_str_json(queryfilter):
+            result = {"response": "queryfilter:invalid_json"}
+            print(json.dumps(result, indent=4, sort_keys=True))
+            return
+        else:
+            return f(*args, **kwargs)
+    return decorated_func
+
+'''
+        valid JSON : data
+'''
+
+def valid_json_data(f):
+    @wraps(f)
+    def decorated_func(*args, **kwargs):
+        data = kwargs.get('data')
+        if data is None or data == "":
+            result = {"response": "data:missing"}
+            print(json.dumps(result, indent=4, sort_keys=True))
+            return
+
+        if not is_str_json(data):
+            result = {"response": "data:invalid_json"}
+            print(json.dumps(result, indent=4, sort_keys=True))
+            return
+        else:
+            return f(*args, **kwargs)
+    return decorated_func
+
+'''
+        valid JSON (list) : data
+'''
+
+def valid_json_list_data(f):
+    @wraps(f)
+    def decorated_func(*args, **kwargs):
+        data = kwargs.get('data')
+        if data is None or data == "":
+            result = {"response": "data:missing"}
+            print(json.dumps(result, indent=4, sort_keys=True))
+            return
+
+        if not is_str_list(data):
+            result = {"response": "data:invalid_json_list"}
+            print(json.dumps(result, indent=4, sort_keys=True))
+            return
+        else:
+            return f(*args, **kwargs)
+    return decorated_func
+
+
+'''
+        valid mongoDB connection
+'''
+
+def check_for_valid_mongo_connection(mongohost='127.0.0.1', mongouser='user1', mongopass='test'):
+    try:
+        conn = pymongo.MongoClient('mongodb://{}:{}@{}:27017/'.format(mongouser, mongopass, mongohost), serverSelectionTimeoutMS=ServerSelectionTimeoutMS)
+        conn.server_info()
+        return True
+    except Exception:
+        return False
+
+
+def valid_mongo_connection(f):
+    @wraps(f)
+    def decorated_func(*args, **kwargs):
+        mongohost = kwargs.get('mongohost')
+        mongouser = kwargs.get('mongouser')
+        mongopass = kwargs.get('mongopass')
+        if check_for_valid_mongo_connection(mongohost, mongouser, mongopass):
+            return f(*args, **kwargs)
+        else:
+            result = {"response": "conn:mongodb_connection_invalid"}
+            print(json.dumps(result, indent=4, sort_keys=True))
+            return
+    return decorated_func
+
+########################################################################################
+
+def is_none_or_empty(my_data):
+    if my_data is None or my_data == "":
+        return True
+    else:
+        return False
+
+########################################################################################
+
+@valid_mongo_connection
+@valid_json_filter_and_data
+def create_or_update_record(mongohost='127.0.0.1', mongouser='user1', mongopass='test', mongodb='db1', mongocollection='testCollection', queryfilter='{"key":"key1"}', data='{"x": 1, "y": "2", "key": "key1"}'):
+    conn = pymongo.MongoClient('mongodb://{}:{}@{}:27017/'.format(mongouser, mongopass, mongohost), serverSelectionTimeoutMS=ServerSelectionTimeoutMS)
+    db = conn[mongodb]
+    collection = db[mongocollection]
+    queryfilter_json = get_json_from_str(queryfilter)
+    data_json = get_json_from_str(data)
+    result = collection.update_many(queryfilter_json, {'$set': data_json}, upsert=True)
+    my_dict = {"result.matched_count": result.matched_count, "result.modified_count": result.modified_count}
+    print(json.dumps(my_dict, indent=4, sort_keys=True))
+    return my_dict
+
+@valid_mongo_connection
+@valid_json_filter_and_data
+def record_update_if_exists(mongohost='127.0.0.1', mongouser='user1', mongopass='test', mongodb='db1', mongocollection='testCollection', queryfilter='{"key":"key1"}', data='{"x": 1, "y": "2", "key": "key1"}'):
+    conn = pymongo.MongoClient('mongodb://{}:{}@{}:27017/'.format(mongouser, mongopass, mongohost), serverSelectionTimeoutMS=ServerSelectionTimeoutMS)
+    db = conn[mongodb]
+    collection = db[mongocollection]
+    queryfilter_json = get_json_from_str(queryfilter)
+    data_json = get_json_from_str(data)
+    result = collection.update_many(queryfilter_json, {'$set': data_json})
+    my_dict = {"result.matched_count": result.matched_count, "result.modified_count": result.modified_count}
+    print(json.dumps(my_dict, indent=4, sort_keys=True))
+    return my_dict
+
+
+@valid_mongo_connection
+@valid_json_filter_and_data
+def replace_records_if_exists(mongohost='127.0.0.1', mongouser='user1', mongopass='test', mongodb='db1', mongocollection='testCollection', queryfilter='{"key":"key1"}', data='{"x": 1, "y": "2", "key": "key1"}'):
+    conn = pymongo.MongoClient('mongodb://{}:{}@{}:27017/'.format(mongouser, mongopass, mongohost), serverSelectionTimeoutMS=ServerSelectionTimeoutMS)
+    db = conn[mongodb]
+    collection = db[mongocollection]
+    queryfilter_json = get_json_from_str(queryfilter)
+    data_json = get_json_from_str(data)
+
+    backend_records = query_records(mongohost=mongohost, mongouser=mongouser, mongopass=mongopass, mongodb=mongodb, mongocollection=mongocollection, queryfilter=queryfilter, print_output=False)
+
+    results = {}
+
+    results["record_results"] = []
+    results["total_results"] = {}
+
+    total_result_modified_count = 0
+    total_result_matched_count = 0
+
+    for backend_record in backend_records:
+        record_id = backend_record["_id"]
+        objInstance = ObjectId(record_id)
+        result = collection.replace_one({"_id": objInstance}, data_json)
+        my_dict = {"result.modified_count": result.modified_count, "result.matched_count": result.matched_count, "_id": record_id}
+        total_result_modified_count = total_result_modified_count + result.modified_count
+        total_result_matched_count = total_result_matched_count + result.matched_count
+        results["record_results"].append(my_dict)
+
+    results["total_results"]["result.modified_count"] = total_result_modified_count
+    results["total_results"]["result.matched_count"] = total_result_matched_count
+
+    print(json.dumps(results, indent=4, sort_keys=True))
+
+@valid_mongo_connection
+@valid_json_data
+def insert_record(mongohost='127.0.0.1', mongouser='user1', mongopass='test', mongodb='db1', mongocollection='testCollection', data='{"x": 1, "y": "2", "key": "key1"}'):
+    conn = pymongo.MongoClient('mongodb://{}:{}@{}:27017/'.format(mongouser, mongopass, mongohost), serverSelectionTimeoutMS=ServerSelectionTimeoutMS)
+    db = conn[mongodb]
+    collection = db[mongocollection]
+    data_json = get_json_from_str(data)
+    result = collection.insert_one(data_json)
+    my_dict = {"result.inserted_id": str(result.inserted_id)}
+    print(json.dumps(my_dict, indent=4, sort_keys=True))
+    return my_dict
+
+@valid_mongo_connection
+@valid_json_list_data
+def insert_many_records(mongohost='127.0.0.1', mongouser='user1', mongopass='test', mongodb='db1', mongocollection='testCollection', data='[{"x": 1, "y": "2"}, {"x2": "11", "y2": "22"}]'):
+    conn = pymongo.MongoClient('mongodb://{}:{}@{}:27017/'.format(mongouser, mongopass, mongohost), serverSelectionTimeoutMS=ServerSelectionTimeoutMS)
+    db = conn[mongodb]
+    collection = db[mongocollection]
+    data_json = get_json_from_str(data)
+    result = collection.insert_many(data_json)
+    inserted_ids = result.inserted_ids
+    my_dict = {"result.inserted_ids": [str(x) for x in inserted_ids]}
+    print(json.dumps(my_dict, indent=4, sort_keys=True))
+    return my_dict
+
+@valid_mongo_connection
+@valid_json_filter
+def query_records(mongohost='127.0.0.1', mongouser='user1', mongopass='test', mongodb='db1', mongocollection='testCollection', queryfilter='{"key":"key1"}', print_output=True):
+    conn = pymongo.MongoClient('mongodb://{}:{}@{}:27017/'.format(mongouser, mongopass, mongohost), serverSelectionTimeoutMS=ServerSelectionTimeoutMS)
+    db = conn[mongodb]
+    collection = db[mongocollection]
+    queryfilter_json = get_json_from_str(queryfilter)
+    result = collection.find(queryfilter_json)
+    all_documents = []
+    for document in result:
+        document["_id"] = str(document["_id"])
+        all_documents.append(document)
+    if print_output:
+        print(json.dumps(all_documents, indent=4, sort_keys=True))
+    return all_documents
+
+@valid_mongo_connection
+@valid_json_filter
+def records_delete(mongohost='127.0.0.1', mongouser='user1', mongopass='test', mongodb='db1', mongocollection='testCollection', queryfilter='{"key":"key1"}'):
+    conn = pymongo.MongoClient('mongodb://{}:{}@{}:27017/'.format(mongouser, mongopass, mongohost), serverSelectionTimeoutMS=ServerSelectionTimeoutMS)
+    db = conn[mongodb]
+    collection = db[mongocollection]
+    queryfilter_json = get_json_from_str(queryfilter)
+    result = collection.delete_many(queryfilter_json)
+    print(json.dumps({"total_records_deleted": result.deleted_count}, indent=4, sort_keys=True))
+
+@valid_mongo_connection
+def drop_collection(mongohost='127.0.0.1', mongouser='user1', mongopass='test', mongodb='db1', mongocollection='testCollection'):
+    conn = pymongo.MongoClient('mongodb://{}:{}@{}:27017/'.format(mongouser, mongopass, mongohost), serverSelectionTimeoutMS=ServerSelectionTimeoutMS)
+    db = conn[mongodb]
+    collection = db[mongocollection]
+    collections = db.list_collection_names()
+
+    if mongocollection not in collections:
+        print(json.dumps({"collection": mongocollection, "action": "collection_missing"}, indent=4, sort_keys=True))
+        return
+    try:
+        collection.drop()
+        print(json.dumps({"collection": mongocollection, "action": "dropped"}, indent=4, sort_keys=True))
+    except Exception:
+        print(json.dumps({"collection": mongocollection, "action": "error:not_dropped"}, indent=4, sort_keys=True))
+
+
+########################################################################################
+
+
+if __name__ == "__main__":
+    main()
+```
+
+Help
+
+```bash
+# python3.8 dbops.py -h
+usage: dbops.py [-h] --operation OPERATION --mongohost MONGOHOST --mongouser MONGOUSER --mongopass MONGOPASS --mongodb MONGODB --mongocollection MONGOCOLLECTION [--queryfilter QUERYFILTER] [--data DATA]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --operation OPERATION
+                        ["insert_record", "insert_many_records", "query_records", "record_create_or_update", "record_update_if_exists", "record_replace_if_exists", "records_delete", "drop_collection"]
+  --mongohost MONGOHOST
+                        Ex: my-host1234.example.com
+  --mongouser MONGOUSER
+                        Ex: user1
+  --mongopass MONGOPASS
+                        Ex: pass123
+  --mongodb MONGODB     Ex: database1
+  --mongocollection MONGOCOLLECTION
+                        Ex: collection1
+  --queryfilter QUERYFILTER
+                        Ex: key1
+  --data DATA           Ex: '{"x": "1", "y": "2"}'
+```
+
+Please set the following environment variables
+
+- $MONGO_HOST
+- $MONGO_USER
+- $MONGO_PASS
+
+Usage Examples
+
+```
+# python3.8 dbops.py \
+--operation insert_record \
+--mongohost $MONGO_HOST \
+--mongouser $MONGO_USER \
+--mongopass $MONGO_PASS \
+--mongodb testdb \
+--mongocollection testCollection \
+--data '{"key_1" : "value_1"}'
+
+{
+    "result.inserted_id": "61f1d555b522e660fd519cfa"
+}
+
+# python3.8 dbops.py \
+--operation insert_many_records \
+--mongohost $MONGO_HOST \
+--mongouser $MONGO_USER \
+--mongopass $MONGO_PASS \
+--mongodb testdb \
+--mongocollection testCollection \
+--data '[{"key_1" : "value_1"}, {"key2":"value2"}]'
+
+{
+    "result.inserted_ids": [
+        "61f1d5addba4ba7d7b165812",
+        "61f1d5addba4ba7d7b165813"
+    ]
+}
+
+# python3.8 dbops.py \
+--operation query_records \
+--mongohost $MONGO_HOST \
+--mongouser $MONGO_USER \
+--mongopass $MONGO_PASS \
+--mongodb testdb \
+--mongocollection testCollection \
+--queryfilter '{"key_11":"value_11"}'
+
+[
+    {
+        "_id": "61f1d5ffa78f1bfff0437b85",
+        "key_11": "value_11"
+    }
+]
+
+# python3.8 dbops.py \
+--operation record_create_or_update \
+--mongohost $MONGO_HOST \
+--mongouser $MONGO_USER \
+--mongopass $MONGO_PASS \
+--mongodb testdb \
+--mongocollection testCollection \
+--queryfilter '{"key_11":"value_11"}' \
+--data '{"key_22": 5000}'
+
+{
+    "result.matched_count": 1,
+    "result.modified_count": 1
+}
+
+
+# python3.8 dbops.py \
+--operation query_records \
+--mongohost $MONGO_HOST \
+--mongouser $MONGO_USER \
+--mongopass $MONGO_PASS \
+--mongodb testdb \
+--mongocollection testCollection \
+--queryfilter '{"key_11":"value_11"}'
+
+[
+    {
+        "_id": "61f1d5ffa78f1bfff0437b85",
+        "key_11": "value_11",
+        "key_22": 5000
+    }
+]
+
+
+# python3.8 dbops.py \
+--operation record_update_if_exists \
+--mongohost $MONGO_HOST \
+--mongouser $MONGO_USER \
+--mongopass $MONGO_PASS \
+--mongodb testdb \
+--mongocollection testCollection \
+--queryfilter '{"key_11":"value_XXX"}' \
+--data '{"key_XX":"value_XX"}'
+
+{
+    "result.matched_count": 0,
+    "result.modified_count": 0
+}
+
+
+# python3.8 dbops.py \
+--operation record_update_if_exists \
+--mongohost $MONGO_HOST \
+--mongouser $MONGO_USER \
+--mongopass $MONGO_PASS \
+--mongodb testdb \
+--mongocollection testCollection \
+--queryfilter '{"key_11":"value_11"}' \
+--data '{"key_XX":"value_XX"}'
+
+{
+    "result.matched_count": 1,
+    "result.modified_count": 1
+}
+
+
+# python3.8 dbops.py \
+--operation records_delete \
+--mongohost $MONGO_HOST \
+--mongouser $MONGO_USER \
+--mongopass $MONGO_PASS \
+--mongodb testdb \
+--mongocollection testCollection \
+--queryfilter '{"key_11":"value_11"}'
+
+{
+    "total_records_deleted": 1
+}
+
+
+# python3.8 dbops.py \
+--operation drop_collection  \
+--mongohost $MONGO_HOST \
+--mongouser $MONGO_USER \
+--mongopass $MONGO_PASS \
+--mongodb testdb \
+--mongocollection testCollection
+
+{
+    "action": "dropped",
+    "collection": "testCollection"
+}
 ```

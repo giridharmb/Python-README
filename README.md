@@ -34,6 +34,8 @@
 
 [Multiprocessing Pool](#multiprocessing-pool)
 
+[SSL Certificate Error](#ssl-certificate-error)
+
 <hr/>
 
 #### [Merging Dictionaries](#merging-dictionaries)
@@ -1490,4 +1492,50 @@ elapsed time: 6.259645751
 result:
 
 [((11, 14), 379749833583241), ((4, 11), 4194304), ((11, 19), 61159090448414546291), ((13, 17), 8650415919381337933), ((16, 15), 1152921504606846976), ((3, 16), 43046721), ((10, 14), 100000000000000), ((15, 12), 129746337890625), ((5, 3), 125), ((15, 5), 759375), ((13, 4), 28561), ((11, 11), 285311670611), ((13, 5), 371293), ((8, 19), 144115188075855872), ((12, 3), 1728), ((17, 16), 48661191875666868481), ((16, 8), 4294967296), ((16, 8), 4294967296), ((11, 5), 161051), ((7, 6), 117649), ((7, 4), 2401), ((18, 14), 374813367582081024), ((8, 16), 281474976710656), ((7, 14), 678223072849), ((9, 10), 3486784401), ((17, 2), 289), ((2, 9), 512), ((12, 12), 8916100448256), ((2, 16), 65536), ((11, 6), 1771561), ((5, 14), 6103515625), ((19, 8), 16983563041), ((15, 18), 1477891880035400390625), ((9, 19), 1350851717672992089), ((4, 15), 1073741824), ((18, 15), 6746640616477458432), ((10, 8), 100000000), ((13, 14), 3937376385699289), ((4, 13), 67108864), ((14, 13), 793714773254144), ((15, 6), 11390625), ((19, 5), 2476099), ((5, 11), 48828125), ((13, 19), 1461920290375446110677), ((8, 15), 35184372088832), ((11, 16), 45949729863572161), ((19, 5), 2476099), ((12, 18), 26623333280885243904), ((15, 16), 6568408355712890625), ((10, 7), 10000000)]
+```
+
+#### [SSL Certificate Error](#ssl-certificate-error)
+
+For Example, If You See The Below Error
+
+```
+python2.7# speedtest
+Retrieving speedtest.net configuration...
+Cannot retrieve speedtest configuration
+ERROR: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:726)>
+
+self._sslobj.do_handshake()
+   SSLError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:590)
+```
+
+Try To See If This Fixes The Issue
+
+```bash
+export PYTHONHTTPSVERIFY=0
+python your_script
+
+or
+
+PYTHONHTTPSVERIFY=0 python your_script
+```
+
+`alternatively`
+
+```python
+import os, ssl
+if (not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None)):
+    ssl._create_default_https_context = ssl._create_unverified_context
+
+### OR JUST THIS
+
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+```
+
+If You Are Using `requests` Module, Then May Be Try This
+
+```python
+import requests 
+from requests.packages.urllib3.exceptions import InsecureRequestWarning 
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning) 
 ```

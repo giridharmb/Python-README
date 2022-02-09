@@ -1593,3 +1593,29 @@ for i in range(100):
 
 print("Logged: {}".format(text))
 ```
+
+INFO/DEBUG Logging
+
+```python
+import logging
+import google.cloud.logging
+client = google.cloud.logging.Client()
+
+# Custom formatter returns a structure, than a string
+class CustomFormatter(logging.Formatter):
+    def format(self, record):
+        logmsg = super(CustomFormatter, self).format(record)
+        return {'msg': losgmsg, 'args':record.args}
+
+# Setup handler explicitly -- different labels
+handler = client.get_default_handler()
+handler.setFormatter(CustomFormatter())
+
+# Setup logger explicitly with this handler                                     
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+logger.addHandler(handler)
+
+for i in range(100):
+    logger.info('hello!', {'key':'a', 'val':'b'})
+```

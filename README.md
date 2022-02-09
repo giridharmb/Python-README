@@ -36,6 +36,8 @@
 
 [SSL Certificate Error](#ssl-certificate-error)
 
+[GCP StackDriver Logging](#gcp-stackdriver-logging)
+
 <hr/>
 
 #### [Merging Dictionaries](#merging-dictionaries)
@@ -1538,4 +1540,56 @@ If You Are Using `requests` Module, Then May Be Try This
 import requests 
 from requests.packages.urllib3.exceptions import InsecureRequestWarning 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning) 
+```
+
+#### [GCP StackDriver Logging](#gcp-stackdriver-logging)
+
+Dependencies:
+
+`requirements.txt`
+
+```
+google-cloud-logging==3.0.0
+google-cloud-bigquery==2.32.0
+google-cloud-storage==2.1.0; python_version == '3.6'
+google-cloud-storage==2.1.0; python_version >= '3.7'
+google-cloud-pubsub==2.9.0
+```
+
+```bash
+pip3.8 install -r requirements.txt
+```
+
+Path To GCP Service Account
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS=/home/user1/gcp_service_account.json
+```
+
+```python
+import os
+# Imports the Google Cloud client library
+from google.cloud import logging
+
+# in case you have not exported 'GOOGLE_APPLICATION_CREDENTIALS'
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/user1/gcp_service_account.json"
+
+# Instantiates a client
+logging_client = logging.Client()
+
+# The name of the log to write to
+log_name = "myApp-Logs"
+# Selects the log to write to
+logger = logging_client.logger(log_name)
+
+# The data to log
+text = "Hello, world!"
+
+# Writes the log entry
+logger.log_text(text)
+
+for i in range(100):                                                            
+    logger.log_struct({'key':'a', 'val':'b'})    
+
+print("Logged: {}".format(text))
 ```

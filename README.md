@@ -1,3 +1,5 @@
+[args and kwargs](#args-and-kwargs)
+
 [Merging Dictionaries](#merging-dictionaries)
 
 [Zip Tuple And List](#zip-tuple-and-list)
@@ -39,6 +41,70 @@
 [GCP StackDriver Logging](#gcp-stackdriver-logging)
 
 <hr/>
+
+#### [args and kwargs](#args-and-kwargs)
+
+Example For : `*args` and `**kwargs`
+
+```python
+def sum_values_args(*args):
+    total_sum = 0
+    for element in args:
+        total_sum += element
+    return total_sum
+
+
+def print_details(**kwargs):
+    for key, value in kwargs.items():
+        print("key : {} , value : {}".format(key, value))
+
+
+def do_sum_print_details(*args, **kwargs):
+    total_sum = 0
+    for element in args:
+        total_sum += element
+
+    print("total_sum : {}".format(total_sum))
+
+    for key, value in kwargs.items():
+        print("key : {} , value : {}".format(key, value))
+
+
+def main():
+    total_sum = sum_values_args(1, 2, 3, 4, 5)
+    print("total_sum : {}".format(total_sum))
+
+    name = "joe"
+    age = 77
+    print_details(name=name, age=age, country="USA", state="California")
+
+    print("--------------------------------------------------------------------------")
+
+    name = "linus"
+    age = 55
+    do_sum_print_details(10, 20, 30, name=name, age=age, country="USA", state="Texas")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+Output
+
+```bash
+# python3.8 argskwargs.py
+total_sum : 15
+key : name , value : joe
+key : age , value : 77
+key : country , value : USA
+key : state , value : California
+--------------------------------------------------------------------------
+total_sum : 60
+key : name , value : linus
+key : age , value : 55
+key : country , value : USA
+key : state , value : Texas
+```
 
 #### [Merging Dictionaries](#merging-dictionaries)
 

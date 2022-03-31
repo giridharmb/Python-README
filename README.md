@@ -40,6 +40,8 @@
 
 [GCP StackDriver Logging](#gcp-stackdriver-logging)
 
+[PostgreSQL Bulk Insert-Read-Export-CSV](#postgresql-bulk-insert-read-export-csv)
+
 <hr/>
 
 #### [args and kwargs](#args-and-kwargs)
@@ -1684,4 +1686,310 @@ logger.addHandler(handler)
 
 for i in range(100):
     logger.info('hello!', {'key':'a', 'val':'b'})
+```
+
+#### [PostgreSQL Bulk Insert-Read-Export-CSV](#postgresql-bulk-insert-read-export-csv)
+
+```python
+import psycopg2
+import argparse
+import sys
+import random
+import uuid
+from datetime import datetime
+
+from pathlib import Path
+home = str(Path.home())
+
+'''
+sudo apt-get install build-essential
+sudo apt-get install python3.8-dev
+sudo apt-get install libpq-dev
+sudo apt-get install postgresql
+sudo pip3.8 install psycopg2-binary
+sudo pip3.8 install psycopg2
+'''
+
+def generate_random_string():
+    random_str = ''.join(random.choice('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ') for i in range(20))
+    return random_str
+
+
+def drop_and_create_table(hostname='127.0.0.1', database='testdb', user='testuser', password='testpassword'):
+    sql_query1 = '''drop table if exists table_1'''
+
+    sql_query2 = '''CREATE TABLE IF NOT EXISTS table_1 (
+          uuid TEXT PRIMARY KEY NOT NULL,
+          currentdate TEXT NOT NULL,
+          randomstr TEXT NOT NULL
+        )'''
+    conn = None
+    try:
+        conn = psycopg2.connect(database=database, user=user, password=password, host=hostname, port='5432')
+        cur = conn.cursor()
+        cur.execute(sql_query1)
+        conn.commit()
+        print("table 'table_1' dropped !")
+        cur.execute(sql_query2)
+        conn.commit()
+        print("table 'table_1' created !")
+        cur.close()
+    except Exception as ex:
+        print("could not create table 'table_1' : {}".format(ex))
+    finally:
+        if conn is not None:
+            conn.close()
+
+
+def bulk_insert_data(hostname='127.0.0.1', database='testdb', user='testuser', password='testpassword'):
+    all_rows_data = []
+    counter = 0
+    num_columns = 3  # which is 'uuid', 'current_date', 'random_str'
+
+    # generate random data
+    for i in range(0, 1000):
+        print("counter : {}".format(counter))
+        uuid_str = str(uuid.uuid4())
+        current_date = str(datetime.now())
+        random_string = generate_random_string()
+        row_data = (
+            uuid_str,
+            current_date,
+            random_string,
+        )
+        all_rows_data.append(row_data)
+        counter = counter + 1
+
+    # using mogrify, insert all the rows generated above into the DB
+    mogrify_str = "(" + ("%s," * num_columns).rstrip(",") + ")"
+
+    conn = None
+    try:
+        conn = psycopg2.connect(database=database, user=user, password=password, host=hostname, port='5432')
+        cur = conn.cursor()
+        queryargs = ','.join(cur.mogrify(mogrify_str, i).decode('utf-8') for i in all_rows_data)
+        cur.execute("INSERT INTO table_1  VALUES " + (queryargs))
+        conn.commit()
+        cur.close()
+        print("total of ({}) records were inserted into the table 'table_1'".format(len(all_rows_data)))
+    except Exception as ex:
+        print("could not insert all the rows into the table 'table_1' : {}".format(ex))
+    finally:
+        if conn is not None:
+            conn.close()
+
+
+def export_table_to_csv(hostname='127.0.0.1', database='testdb', user='testuser', password='testpassword', filename='output.csv'):
+    conn = None
+    try:
+        conn = psycopg2.connect(database=database, user=user, password=password, host=hostname, port='5432')
+        cur = conn.cursor()
+        sql_query = "select * from table_1"
+        outputquery = 'copy ({0}) to stdout with csv header'.format(sql_query)
+        with open(filename, 'w') as f:
+            cur.copy_expert(outputquery, f)
+        cur.close()
+        conn.close()
+        print("all the rows from table 'table_1' were saved to file ({})".format(filename))
+    except Exception as ex:
+        print("could not export table 'table_1' to csv file ({})' : {}".format(filename, ex))
+    finally:
+        if conn is not None:
+            conn.close()
+
+
+def fetch_all_rows(hostname='127.0.0.1', database='testdb', user='testuser', password='testpassword'):
+    conn = None
+    try:
+        conn = psycopg2.connect(database=database, user=user, password=password, host=hostname, port='5432')
+        cur = conn.cursor()
+        query = "select uuid, currentdate, randomstr from table_1"
+        cur.execute(query)
+        rows = cur.fetchall()
+        for row in rows:
+            print("uuid        : {}".format(row[0]))
+            print("durrentdate : {}".format(row[1]))
+            print("randomstr   : {}".format(row[2]))
+            print("--------------------------------------------------")
+    except Exception as ex:
+        print("could not insert all the rows into the table 'table_1' : {}".format(ex))
+    finally:
+        if conn is not None:
+            conn.close()
+
+
+if __name__ == "__main__":
+
+    list_of_operations = ["drop_and_create_table", "bulk_insert_data", "export_csv", "fetch_all_rows"]
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-s", "--server", help="PostgreSQL Host")
+    parser.add_argument("-d", "--database", help="Database")
+    parser.add_argument("-u", "--user", help="Username")
+    parser.add_argument("-p", "--password", help="Password")
+    parser.add_argument("-o", "--operation", help="Operation, Valid List of Operations: {}".format(list_of_operations))
+    parser.add_argument("-w", "--writefile", help="CSV (Export) File Name")
+    parser.add_argument("-t", "--table", help="PG SQL Table Name")
+
+    args = parser.parse_args()
+
+    if not args.operation:
+        print("Please provide a valid operation ! List of valid operations : {}".format(list_of_operations))
+        sys.exit(1)
+
+    if args.operation not in list_of_operations:
+        print("Please provide a valid operation ! List of valid operations : {}".format(list_of_operations))
+        sys.exit(1)
+
+    if not args.server:
+        print("Please provide a valid hostname for PG SQL !")
+        sys.exit(1)
+
+    if not args.database:
+        print("Please provide a valid database for PG SQL!")
+        sys.exit(1)
+
+    if not args.user:
+        print("Please provide a valid username for PG SQL !")
+        sys.exit(1)
+
+    if not args.password:
+        print("Please provide a valid password for PG SQL !")
+        sys.exit(1)
+
+    if args.operation == "drop_and_create_table":
+        drop_and_create_table(hostname=args.server, database=args.database, user=args.user, password=args.password)
+
+    if args.operation == "bulk_insert_data":
+        bulk_insert_data(hostname=args.server, database=args.database, user=args.user, password=args.password)
+
+    if args.operation == "fetch_all_rows":
+        fetch_all_rows(hostname=args.server, database=args.database, user=args.user, password=args.password)
+
+    if args.operation == "export_csv":
+        if not args.writefile:
+            print("Please provide a valid outpost (export) CSV file name !")
+            sys.exit(1)
+        export_table_to_csv(hostname=args.server, database=args.database, user=args.user, password=args.password, filename=args.writefile)
+
+
+'''
+----[Python Script]----
+
+# python3.8 bulkinsert.py -h
+usage: bulkinsert.py [-h] [-s SERVER] [-d DATABASE] [-u USER] [-p PASSWORD] [-o OPERATION] [-w WRITEFILE] [-t TABLE]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -s SERVER, --server SERVER
+                        PostgreSQL Host
+  -d DATABASE, --database DATABASE
+                        Database
+  -u USER, --user USER  Username
+  -p PASSWORD, --password PASSWORD
+                        Password
+  -o OPERATION, --operation OPERATION
+                        Operation, Valid List of Operations: ['drop_and_create_table', 'bulk_insert_data', 'export_csv', 'fetch_all_rows']
+  -w WRITEFILE, --writefile WRITEFILE
+                        CSV (Export) File Name
+  -t TABLE, --table TABLE
+                        PG SQL Table Name
+                        
+----[DB]----
+
+metadata=> \d table_1
+               Table "public.table_1"
+   Column    | Type | Collation | Nullable | Default
+-------------+------+-----------+----------+---------
+ uuid        | text |           | not null |
+ currentdate | text |           | not null |
+ randomstr   | text |           | not null |
+Indexes:
+    "table_1_pkey" PRIMARY KEY, btree (uuid)
+
+metadata=> select count(*) from table_1;
+ count
+-------
+     0
+(1 row)
+
+----[Bulk Insert Data]----
+
+# python3.8 bulkinsert.py --server my-pgsql-host.company.com --database $TEST_DB --user $TEST_USER --password $TEST_PASS --operation bulk_insert_data
+
+counter : 0
+counter : 1
+counter : 2
+counter : 3
+counter : 4
+counter : 5
+counter : 6
+counter : 7
+counter : 8
+...
+...
+...
+counter : 993
+counter : 994
+counter : 995
+counter : 996
+counter : 997
+counter : 998
+counter : 999
+total of (1000) records were inserted into the table 'table_1'
+
+
+----[Fetch All Rows]----
+
+# python3.8 bulkinsert.py --server my-pgsql-host.company.com --database $TEST_DB --user $TEST_USER --password $TEST_PASS --operation fetch_all_rows
+
+uuid        : 20ba7978-8628-40ce-92b5-a2dc1dbe18a6
+durrentdate : 2022-03-31 13:40:34.105504
+randomstr   : ZTSPMRYC3ZYPHWU630XG
+--------------------------------------------------
+uuid        : c2f68eee-bc10-4816-af03-9681d4a85b4b
+durrentdate : 2022-03-31 13:40:34.105554
+randomstr   : W34I871O7V8IZ719EN0P
+--------------------------------------------------
+uuid        : a0f09791-355f-4feb-bbde-8c09745e23c9
+durrentdate : 2022-03-31 13:40:34.105587
+randomstr   : 3PWMOOR2GG3IA92XKGST
+--------------------------------------------------
+uuid        : dfcbda51-eda7-483b-8c11-ca14f5d59833
+durrentdate : 2022-03-31 13:40:34.105620
+randomstr   : UT72MK3M8ZHP11Z0MJU6
+--------------------------------------------------
+...
+...
+...
+uuid        : f8e3691f-276a-4d59-a4e0-df2426211cf9
+durrentdate : 2022-03-31 13:40:34.134973
+randomstr   : IHIXZRBUC6A4IQQM3YF1
+--------------------------------------------------
+
+----[Export To CSV]----
+
+# python3.8 bulkinsert.py --server my-pgsql-host.company.com --database $TEST_DB --user $TEST_USER --password $TEST_PASS --operation export_csv --writefile output.csv
+
+all the rows from table 'table_1' were saved to file (output.csv)
+
+Verify CSV:
+
+# cat output.csv
+uuid,currentdate,randomstr
+20ba7978-8628-40ce-92b5-a2dc1dbe18a6,2022-03-31 13:40:34.105504,ZTSPMRYC3ZYPHWU630XG
+c2f68eee-bc10-4816-af03-9681d4a85b4b,2022-03-31 13:40:34.105554,W34I871O7V8IZ719EN0P
+a0f09791-355f-4feb-bbde-8c09745e23c9,2022-03-31 13:40:34.105587,3PWMOOR2GG3IA92XKGST
+dfcbda51-eda7-483b-8c11-ca14f5d59833,2022-03-31 13:40:34.105620,UT72MK3M8ZHP11Z0MJU6
+...
+...
+...
+61368551-a494-46a5-ba5f-617748fb32f6,2022-03-31 13:40:34.134816,7I9FLDFEWNRJYF4CMET0
+2a0a83bc-ca2e-4bad-9d92-63d0d98331ff,2022-03-31 13:40:34.134843,XN9TLLJ4U5FD1B7AZFPU
+8400703f-dffa-449a-9c7a-945eee001104,2022-03-31 13:40:34.134868,EUK5835Y7JRJ3SS7C4H8
+62508838-901c-4fcc-84fa-d81e36a57d85,2022-03-31 13:40:34.134898,GEUAONSJUYY9S9MAMTG9
+6c7f5a12-fd89-412e-aa37-d2a71c8b7a3d,2022-03-31 13:40:34.134923,76UL1GTJUE3O2NZNKUMF
+facea397-a88b-44ff-bf05-67794cb3b552,2022-03-31 13:40:34.134948,JMY2L5L7CWIJN0KWAR0N
+f8e3691f-276a-4d59-a4e0-df2426211cf9,2022-03-31 13:40:34.134973,IHIXZRBUC6A4IQQM3YF1
+'''
 ```

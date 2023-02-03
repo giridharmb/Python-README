@@ -42,6 +42,8 @@
 
 [PostgreSQL Bulk Insert-Read-Export-CSV](#postgresql-bulk-insert-read-export-csv)
 
+[OpenStack Live Migrations](#openstack-live-migrations)
+
 <hr/>
 
 #### [args and kwargs](#args-and-kwargs)
@@ -1992,4 +1994,85 @@ dfcbda51-eda7-483b-8c11-ca14f5d59833,2022-03-31 13:40:34.105620,UT72MK3M8ZHP11Z0
 facea397-a88b-44ff-bf05-67794cb3b552,2022-03-31 13:40:34.134948,JMY2L5L7CWIJN0KWAR0N
 f8e3691f-276a-4d59-a4e0-df2426211cf9,2022-03-31 13:40:34.134973,IHIXZRBUC6A4IQQM3YF1
 '''
+```
+
+#### [OpenStack Live Migrations](#openstack-live-migrations)
+
+```python
+#!/opt/homebrew/bin/python3.9
+
+import string
+import random
+import uuid
+import json
+import time
+from multiprocessing.dummy import Pool as ThreadPool
+from multiprocessing import Queue
+from multiprocessing import Process
+import threading
+
+N = 7
+
+my_queue = Queue()
+
+def get_random_str():
+    res = ''.join(random.choices(string.ascii_uppercase + string.digits, k=N))
+    return res
+
+
+def get_migration_jobs():
+    jobs = []
+    for i in range(0, 20):
+        src_hv = "host-{}-{}.prod.walmart.com".format(get_random_str(), i)
+        dest_hv = "host-{}-{}.prod.walmart.com".format(get_random_str(), i)
+        vm_uuid = str(uuid.uuid4())
+        my_job = (src_hv, dest_hv, vm_uuid,)
+        jobs.append(my_job)
+    return jobs
+
+
+def live_migrate(job):
+    (hv_source, hv_dest, vm_uuid) = job
+    result = {vm_uuid: False}
+    try:
+        print("(IN_PROGRESS) Live Migrating : {} from {} to {}...".format(vm_uuid, hv_source, hv_dest))
+        time.sleep(random.uniform(2.0, 4.0))
+        print("(DONE) Live Migration Done : {} from {} to {}.".format(vm_uuid, hv_source, hv_dest))
+        result = {vm_uuid: True}
+    except Exception as ex:
+        result = {vm_uuid: False}
+    finally:
+        my_queue.put(result)
+        return result
+
+
+def main():
+    my_jobs = get_migration_jobs()
+    print(json.dumps(my_jobs, indent=4, sort_keys=True))
+    result_of_migrations = perform_live_migration(4)
+    print(json.dumps(result_of_migrations, indent=4, sort_keys=True))
+
+
+def fetch_results_from_queue():
+    try:
+        result = my_queue.get()
+        print("Data From Queue : {}".format(result))
+    except Exception as ex:
+        print("error : could not fetch data from queue : {}".format(ex))
+
+
+def perform_live_migration(thread_pool_size):
+    monitoring_thread = threading.Thread(target=fetch_results_from_queue, args=())
+    monitoring_thread.start()
+    tasks = get_migration_jobs()
+    pool = ThreadPool(thread_pool_size)
+    results = pool.map(live_migrate, tasks)
+    pool.close()
+    pool.join()
+    monitoring_thread.join()
+    print("Done With All Migrations !")
+    return results
+
+if __name__ == "__main__":
+    main()
 ```

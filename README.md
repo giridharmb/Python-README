@@ -2028,6 +2028,7 @@ def get_migration_jobs():
         vm_uuid = str(uuid.uuid4())
         my_job = (src_hv, dest_hv, vm_uuid,)
         jobs.append(my_job)
+    jobs.append(("-1","-1","-1"))
     return jobs
 
 
@@ -2043,27 +2044,34 @@ def live_migrate(job):
         result = {vm_uuid: False}
     finally:
         my_queue.put(result)
+        close_queue = True
         return result
 
 
 def main():
     my_jobs = get_migration_jobs()
     print(json.dumps(my_jobs, indent=4, sort_keys=True))
+
     result_of_migrations = perform_live_migration(4)
     print(json.dumps(result_of_migrations, indent=4, sort_keys=True))
 
 
 def fetch_results_from_queue():
     try:
-        result = my_queue.get()
-        print("Data From Queue : {}".format(result))
+        while True:
+            result = my_queue.get()
+            if list(result)[0] == "-1":
+                break
+            print("Data From Queue : {}".format(result))
     except Exception as ex:
         print("error : could not fetch data from queue : {}".format(ex))
 
 
 def perform_live_migration(thread_pool_size):
+
     monitoring_thread = threading.Thread(target=fetch_results_from_queue, args=())
     monitoring_thread.start()
+
     tasks = get_migration_jobs()
     pool = ThreadPool(thread_pool_size)
     results = pool.map(live_migrate, tasks)

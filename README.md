@@ -44,6 +44,8 @@
 
 [OpenStack Live Migrations](#openstack-live-migrations)
 
+[BigQuery Inserter](#bigquery-inserter)
+
 <hr/>
 
 #### [args and kwargs](#args-and-kwargs)
@@ -2080,6 +2082,188 @@ def perform_live_migration(thread_pool_size):
     monitoring_thread.join()
     print("Done With All Migrations !")
     return results
+
+if __name__ == "__main__":
+    main()
+```
+
+#### [BigQuery Inserter](#bigquery-inserter)
+
+- 2 Columns
+  - data (JSON)
+  - scrape_ts (Scrape TimeStamp , Partitioned Every 1 Hour)
+- Write JSON Data to "data" column
+- GCP Project Data
+  - PROJECT_ID > `my-gcp-project`
+  - DATASET_ID > `my_dataset`
+  - TABLE_ID > `my_table`
+- Auto Create `my_table` > If it does not exist
+- Pre-Requisite : Make sure dataset `my_dataset` already exists
+
+#### How To Run ?
+
+```bash
+python3.9 bq_write.py
+```
+
+File : `bq_write.py`
+
+```python
+from google.cloud import bigquery
+from google.api_core import exceptions
+from typing import Union, List, Dict, Any
+import json
+from datetime import datetime
+import pytz
+import os
+
+'''
+python3.9 -m pip install google-cloud-bigquery pytz
+'''
+
+'''
+# Set environment variable for authentication
+export GOOGLE_APPLICATION_CREDENTIALS="/home/user/my-gcp-project.json"
+'''
+
+class BigQueryHandler:
+    def __init__(self, project_id: str, dataset_id: str, table_id: str):
+        """Initialize BigQuery handler"""
+        self.client = bigquery.Client(project=project_id)
+        self.table_ref = f"{project_id}.{dataset_id}.{table_id}"
+
+    def create_table_if_not_exists(self) -> bool:
+        """Create a table with JSON data column and hourly partitioned timestamp if it doesn't exist"""
+        try:
+            # Check if table exists
+            try:
+                self.client.get_table(self.table_ref)
+                print(f"Table {self.table_ref} already exists")
+                return False
+            except exceptions.NotFound:
+                # Define schema
+                schema = [
+                    bigquery.SchemaField("data", "JSON", mode="REQUIRED"),
+                    bigquery.SchemaField("scrape_ts", "TIMESTAMP", mode="REQUIRED")
+                ]
+
+                # Create table configuration
+                table = bigquery.Table(self.table_ref, schema=schema)
+
+                # Set hourly time partitioning on scrape_ts
+                table.time_partitioning = bigquery.TimePartitioning(
+                    type_=bigquery.TimePartitioningType.HOUR,
+                    field="scrape_ts"
+                )
+
+                # Create the table
+                self.client.create_table(table)
+                print(f"Created table {self.table_ref}")
+                return True
+
+        except Exception as e:
+            print(f"Error creating table: {str(e)}")
+            raise
+
+    def insert_data(self, data: Union[Dict[str, Any], List[Dict[str, Any]]]) -> bool:
+        """Insert data into the BigQuery table"""
+        try:
+            # Convert single dict to list
+            if isinstance(data, dict):
+                data = [data]
+
+            current_time = datetime.now(pytz.UTC)
+
+            # Prepare rows for insertion
+            rows = []
+            for item in data:
+                # Convert datetime to string format that BigQuery expects
+                row = {
+                    "data": json.dumps(item),
+                    "scrape_ts": current_time.strftime('%Y-%m-%d %H:%M:%S.%f %Z')
+                }
+                rows.append(row)
+
+            # Get table reference and insert rows
+            table = self.client.get_table(self.table_ref)
+            errors = self.client.insert_rows_json(table, rows)
+
+            if not errors:
+                print(f"Successfully inserted {len(rows)} rows")
+                return True
+            else:
+                print(f"Insertion errors: {errors}")
+                return False
+
+        except Exception as e:
+            print(f"Error inserting data: {str(e)}")
+            return False
+
+    def batch_insert(self, data_list: List[Dict[str, Any]], batch_size: int = 1000) -> bool:
+        """Insert data in batches"""
+        try:
+            for i in range(0, len(data_list), batch_size):
+                batch = data_list[i:i + batch_size]
+                if not self.insert_data(batch):
+                    return False
+                print(f"Processed batch {i//batch_size + 1}")
+            return True
+
+        except Exception as e:
+            print(f"Batch insertion error: {str(e)}")
+            return False
+
+def generate_sample_data(num_records: int = 10) -> List[Dict[str, Any]]:
+    """Generate sample data for testing"""
+    return [
+        {
+            "id": i,
+            "name": f"Product {i}",
+            "price": round(10 + i * 1.5, 2),
+            "metadata": {
+                "category": f"Category {i % 3}",
+                "in_stock": i % 2 == 0
+            }
+        }
+        for i in range(num_records)
+    ]
+
+def main():
+    # Configuration
+    PROJECT_ID = "my-gcp-project"
+    DATASET_ID = "my_dataset"
+    TABLE_ID = "my_table"
+
+    try:
+        # Initialize handler
+        handler = BigQueryHandler(PROJECT_ID, DATASET_ID, TABLE_ID)
+
+        # Create table if it doesn't exist
+        handler.create_table_if_not_exists()
+
+        # Generate and insert sample data
+        print("\nInserting single record...")
+        single_record = {
+            "id": 0,
+            "name": "Test Product",
+            "price": 99.99,
+            "metadata": {
+                "category": "Test Category",
+                "in_stock": True
+            }
+        }
+        handler.insert_data(single_record)
+
+        print("\nInserting multiple records...")
+        sample_data = generate_sample_data(5)
+        handler.insert_data(sample_data)
+
+        print("\nPerforming batch insertion...")
+        large_dataset = generate_sample_data(150)
+        handler.batch_insert(large_dataset, batch_size=50)
+
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
 
 if __name__ == "__main__":
     main()

@@ -46,6 +46,8 @@
 
 [BigQuery Inserter](#bigquery-inserter)
 
+[Python 3-10 On Ubuntu 18-04](#python-3-10-on-ubuntu-18-04)
+
 <hr/>
 
 #### [args and kwargs](#args-and-kwargs)
@@ -2267,4 +2269,121 @@ def main():
 
 if __name__ == "__main__":
     main()
+```
+
+#### [Python 3-10 On Ubuntu 18-04](#python-3-10-on-ubuntu-18-04)
+
+# Installing Python 3.10 on Ubuntu 18.04
+
+This guide provides step-by-step instructions for installing Python 3.10 on Ubuntu 18.04 from source. Since Python 3.10 isn't available in the default Ubuntu 18.04 repositories, we'll build it from source code.
+
+## Prerequisites
+
+Before beginning the installation, ensure you have sufficient privileges to install packages and the required disk space (approximately 500MB).
+
+## Installation Steps
+
+### 1. Install Required Dependencies
+
+```bash
+sudo apt update
+sudo apt install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev \
+libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libbz2-dev
+```
+
+### 2. Download and Extract Python Source Code
+
+```bash
+wget https://www.python.org/ftp/python/3.10.13/Python-3.10.13.tgz
+tar -xf Python-3.10.13.tgz
+cd Python-3.10.13
+```
+
+### 3. Configure and Build Python
+
+```bash
+./configure --enable-optimizations
+# Replace '4' with your number of CPU cores
+sudo make -j 4
+sudo make altinstall
+```
+
+Note: We use `make altinstall` instead of `make install` to prevent replacing the default Python binary.
+
+### 4. Install pip
+
+```bash
+curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
+```
+
+### 5. Verify Installation
+
+```bash
+python3.10 --version
+```
+
+## Making Python 3.10 the Default (Optional)
+
+To set Python 3.10 as the default Python 3 interpreter:
+
+```bash
+sudo update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.10 1
+```
+
+To switch between different Python versions:
+
+```bash
+sudo update-alternatives --config python3
+```
+
+## Uninstallation
+
+If you need to remove Python 3.10:
+
+```bash
+sudo rm -rf /usr/local/lib/python3.10
+sudo rm /usr/local/bin/python3.10
+sudo rm /usr/local/bin/pip3.10
+```
+
+## Troubleshooting
+
+### SSL Issues
+
+If you encounter SSL-related errors:
+
+```bash
+# Install SSL dependencies
+sudo apt-get install -y libssl-dev openssl
+
+# Reconfigure Python with SSL
+cd Python-3.10.13
+./configure --enable-optimizations --with-openssl=/usr
+sudo make -j 4
+sudo make altinstall
+```
+
+### Development Headers
+
+If you need Python development headers:
+
+```bash
+sudo apt-get install python3.10-dev
+```
+
+## Using with Ansible
+
+To use this Python version with Ansible, specify it in your inventory file:
+
+```ini
+[your_host]
+hostname ansible_python_interpreter=/usr/local/bin/python3.10
+```
+
+## Package Installation
+
+After installation, you can install Python packages using:
+
+```bash
+python3.10 -m pip install package_name
 ```
